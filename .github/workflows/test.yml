@@ -23,3 +23,5 @@ jobs:
           ${{ runner.os }}-go-
     - name: Test
       run: go test -cover -race ./...
+      env:
+        DEPLOY_KEY: ${{ secrets.DEPLOY_KEY }}
