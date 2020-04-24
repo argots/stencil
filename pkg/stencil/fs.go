@@ -49,6 +49,7 @@ func (fs *FS) Read(path string) ([]byte, error) {
 	return ioutil.ReadFile(path)
 }
 
+// ReadGit reads a git-like URL.
 func (fs *FS) ReadGit(host, path, fragment string) ([]byte, error) {
 	branch := "master"
 	gitURL := ""
