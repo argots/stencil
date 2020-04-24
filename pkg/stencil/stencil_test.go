@@ -11,7 +11,8 @@ import (
 )
 
 func TestCopyFile(t *testing.T) {
-	code := `{{ stencil.CopyFile "/test.txt" "git:git@github.com:argots/stencil.git/pkg/stencil/testdata/test.stencil" }}`
+	//nolint: lll
+	code := `{{ stencil.CopyFile "test1" "/test.txt" "git:git@github.com:argots/stencil.git/pkg/stencil/testdata/test.stencil" }}`
 	var got []byte
 	fs := fakeFS{
 		files: map[string]string{"fake.stencil": code},
