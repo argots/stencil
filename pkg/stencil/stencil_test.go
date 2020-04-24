@@ -2,6 +2,7 @@ package stencil_test
 
 import (
 	"io/ioutil"
+	"log"
 	"os"
 	"strings"
 	"testing"
@@ -58,4 +59,5 @@ func (f fakeFS) Read(fname string) ([]byte, error) {
 type discardLogger struct{}
 
 func (discardLogger) Printf(fmt string, v ...interface{}) {
+	log.Printf(fmt, v...)
 }
