@@ -1,1 +1,1 @@
-{{ stencil.CopyFile "/testdata/test.txt" "github.com/argots/slang/test.txt" }}
+{{ stencil.CopyFile "/pkg/stencil/testdata/test.txt" "git:git@github.com:storymachine/cypress.git#wip/README.md" }}

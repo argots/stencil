@@ -5,6 +5,7 @@ import (
 	"bytes"
 	"errors"
 	"flag"
+	"os"
 	"text/template"
 )
 
@@ -19,15 +20,16 @@ type Logger interface {
 // Use FS{} or a custom implementation.
 type FileSystem interface {
 	Read(path string) ([]byte, error)
+	Write(path string, data []byte, mode os.FileMode) error
 }
 
 // New creates a new stencil manager.
-func New(verbose, errorl Logger, fs FileSystem) *Stencil {	
+func New(verbose, errorl Logger, fs FileSystem) *Stencil {
 	s := &Stencil{
-		State: map[string]interface{}{},
-		Funcs: map[string]interface{}{},
+		State:  map[string]interface{}{},
+		Funcs:  map[string]interface{}{},
 		Printf: verbose.Printf,
-		Errorf: func(fmt string, v...interface{}) error {
+		Errorf: func(fmt string, v ...interface{}) error {
 			errorl.Printf(fmt, v...)
 			err, _ := v[len(v)-1].(error)
 			return err
@@ -42,10 +44,10 @@ func New(verbose, errorl Logger, fs FileSystem) *Stencil {
 
 // Stencil maintains all the state for managing a single directory.
 type Stencil struct {
-	State map[string]interface{}
-	Funcs map[string]interface{}
-	Printf func(format string, v...interface{})
-	Errorf func(format string, v...interface{}) error
+	State  map[string]interface{}
+	Funcs  map[string]interface{}
+	Printf func(format string, v ...interface{})
+	Errorf func(format string, v ...interface{}) error
 	FileSystem
 }
 
@@ -60,11 +62,14 @@ func (s *Stencil) Main() error {
 	}
 }
 
-
 // CopyFile copies a url to a local file.
 func (s *Stencil) CopyFile(localPath, url string) error {
 	s.Printf("copying %s to %s\n", url, localPath)
-	return nil
+	data, err := s.Read(url)
+	if err != nil {
+		return s.Errorf("Error reading %s %v\n", url, err)
+	}
+	return s.Write(localPath, data, 0666)
 }
 
 // Run runs a template discarding the output.
@@ -73,11 +78,10 @@ func (s *Stencil) Run(source string) error {
 	return err
 }
 
-
 // Import imports a template after applying it.
 func (s *Stencil) Import(source string) (string, error) {
 	s.Printf("Running import %s\n", source)
-	
+
 	data, err := s.Read(source)
 	if err != nil {
 		return "", s.Errorf("Error reading %s: %v\n", source, err)
@@ -91,18 +95,16 @@ func (s *Stencil) Import(source string) (string, error) {
 	var buf bytes.Buffer
 	err = t.Execute(&buf, s.State)
 	if err != nil {
-		return "", s.Errorf("Error executing %s: $v\n", source, err)
+		return "", s.Errorf("Error executing %s: %v\n", source, err)
 	}
 
 	return buf.String(), nil
 }
 
-
 func (s *Stencil) Help(cmd string) error {
 	if cmd != "" {
 		return s.Errorf("Unknown command: %s\n", cmd)
 	}
-	flag.PrintDefaults();
+	flag.PrintDefaults()
 	return errors.New("unknown command")
 }
-
