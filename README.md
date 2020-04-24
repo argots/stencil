@@ -9,7 +9,7 @@ A package manager for static files and templates
 # todo
 
 - [X] `stencil pull file.tpl` should run the file as a go template.
-- [X] Add template function `file(localPath, githubURL)` which copies file at githubURL.
+- [X] Add template function `stencil.CopyFile` to copy github URLs locally.
 - [ ] Add 3-way merge if git pull brings newer file and local file also modified.
 - [ ] Add template function `stencil(localPath, githubURL)` which also treats file as a template.
 - [ ] `stencil pull github.com/...` souuld fetch from public github (standard github url)
