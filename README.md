@@ -12,6 +12,7 @@ A package manager for static files and templates
 - [X] Add template function `stencil.CopyFile` to copy github URLs locally.
 - [X] Add template variables `stencil.DefineBool("name", "prompt")` and `stencil.VarBool("name")`
 - [X] Add ability to modify variables `stencil -var XYZ=true`
+- [X] Add github releases
 - [ ] Add 3-way merge if git pull brings newer file and local file also modified.
 - [ ] `stencil pull github.com/...` should fetch from public github (standard github url)
 - [ ] Update `stencil.CopyFile(..)` to support relative github URLs

@@ -1,0 +1,73 @@
+on:
+  push:
+    tags:
+      - 'v*' # Push events to matching v*, i.e. v1.0, v20.15.10
+name: Release
+jobs:
+  release:
+    name: Create Release
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@master
+      - name: Install Go
+        uses: actions/setup-go@v2-beta
+        with:
+          go-version: 1.14.x
+      - name: Build Release Binaries
+        run: ./scripts/build_release_binaries.sh
+      - name: Get Tag Message
+        id: tag_message
+        run: echo "::set-output name=message::$(git cat-file -p ${{ githuub.ref }} | tail -n +6)"
+        output: 
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@latest
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # This token is provided by Actions, you do not need to create your own token
+        with:
+          tag_name: ${{ github.ref }}
+          release_name: Release ${{ github.ref }}
+          body: ${{ steps.tag_message.outputs.message }}
+          draft: false
+          prerelease: false
+      - name: Release Linux 386
+        id: release_linux_386
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./bin/linux_386.zip
+          asset_name: linux_386.zip
+          asset_content_type: application/zip
+      - name: Release Linux AMD64
+        id: release_linux_amd64
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./bin/linux_amd64.zip
+          asset_name: linux_amd64.zip
+          asset_content_type: application/zip
+      - name: Release Darwin 386
+        id: release_darwin_386
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./bin/darwin_386.zip
+          asset_name: darwin_386.zip
+          asset_content_type: application/zip
+      - name: Release Darwin AMD64
+        id: release_darwin_amd64
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./bin/darwin_amd64.zip
+          asset_name: darwin_amd64.zip
+          asset_content_type: application/zip
