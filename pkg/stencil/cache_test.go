@@ -1,6 +1,7 @@
 package stencil_test
 
 import (
+	"flag"
 	"os"
 	"path/filepath"
 	"testing"
@@ -14,7 +15,7 @@ func TestCacheNoRoot(t *testing.T) {
 		t.Fatal("os.Getwd", err)
 	}
 
-	c, err := stencil.NewCache()
+	c, err := stencil.NewCache(flag.NewFlagSet("test", flag.ContinueOnError), nil, nil)
 	if err != nil {
 		t.Fatal("stencil.NewCache", err)
 	}
@@ -37,7 +38,7 @@ func TestCacheRoot(t *testing.T) {
 		t.Fatal("os.Chdir", err)
 	}
 
-	c, err := stencil.NewCache()
+	c, err := stencil.NewCache(flag.NewFlagSet("test", flag.ContinueOnError), nil, nil)
 	if err != nil {
 		t.Fatal("stencil.NewCache", err)
 	}
@@ -61,7 +62,7 @@ func TestCacheSetGet(t *testing.T) {
 		t.Fatal("os.Chdir", err)
 	}
 
-	c, err := stencil.NewCache()
+	c, err := stencil.NewCache(flag.NewFlagSet("test", flag.ContinueOnError), nil, nil)
 	if err != nil {
 		t.Fatal("stencil.NewCache", err)
 	}

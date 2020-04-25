@@ -5,6 +5,7 @@ import (
 	"bytes"
 	"errors"
 	"flag"
+	"fmt"
 	"os"
 	"text/template"
 )
@@ -24,10 +25,11 @@ type FileSystem interface {
 }
 
 // New creates a new stencil manager.
-func New(verbose, errorl Logger, fs FileSystem) *Stencil {
+func New(verbose, errorl Logger, c *Cache, fs FileSystem) *Stencil {
 	s := &Stencil{
 		State:  map[string]interface{}{},
 		Funcs:  map[string]interface{}{},
+		Cache:  c,
 		Printf: verbose.Printf,
 		Errorf: func(fmt string, v ...interface{}) error {
 			errorl.Printf(fmt, v...)
@@ -44,28 +46,38 @@ func New(verbose, errorl Logger, fs FileSystem) *Stencil {
 
 // Stencil maintains all the state for managing a single directory.
 type Stencil struct {
-	Dir    string
-	State  map[string]interface{}
-	Funcs  map[string]interface{}
+	State map[string]interface{}
+	Funcs map[string]interface{}
+	*Cache
 	Printf func(format string, v ...interface{})
 	Errorf func(format string, v ...interface{}) error
 	FileSystem
 }
 
 // Main implements the main program
-func (s *Stencil) Main() error {
-	flag.Parse()
-	switch flag.Arg(0) {
-	case "pull":
-		return s.Run(flag.Arg(1))
-	default:
-		return s.Help(flag.Arg(0))
+func (s *Stencil) Main(f *flag.FlagSet, args []string) error {
+	f.Usage = func() {
+		fmt.Fprint(s.Cache.Vars.stdout, "Usage: stencil [options] pull github-url")
+		f.PrintDefaults()
 	}
+	f.SetOutput(s.Cache.Vars.stdout)
+	if err := f.Parse(args[1:]); err != nil {
+		return s.Errorf("flagset parse", err)
+	}
+
+	switch f.Arg(0) {
+	case "pull":
+		return s.Run(f.Arg(1))
+	case "":
+		f.Usage()
+		return nil
+	}
+	return s.Errorf("%v", errors.New("unknown command: "+f.Arg(0)))
 }
 
 // CopyFile copies a url to a local file.
 func (s *Stencil) CopyFile(key, localPath, url string) error {
-	s.Printf("copying %s to %s, key (%)\n", url, localPath, key)
+	s.Printf("copying %s to %s, key (%s)\n", url, localPath, key)
 	data, err := s.Read(url)
 	if err != nil {
 		return s.Errorf("Error reading %s %v\n", url, err)
@@ -100,13 +112,4 @@ func (s *Stencil) Import(source string) (string, error) {
 	}
 
 	return buf.String(), nil
-}
-
-// Help prints out the CLI option defaults.
-func (s *Stencil) Help(cmd string) error {
-	if cmd != "" {
-		return s.Errorf("Unknown command: %s\n", cmd)
-	}
-	flag.PrintDefaults()
-	return errors.New("unknown command")
 }
