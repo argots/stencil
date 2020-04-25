@@ -2,14 +2,16 @@ package stencil
 
 import (
 	"encoding/json"
+	"flag"
+	"io"
 	"io/ioutil"
 	"os"
 	"path/filepath"
 )
 
 // NewCache returns a new cache.
-func NewCache() (*Cache, error) {
-	c := &Cache{}
+func NewCache(f *flag.FlagSet, stdin io.Reader, stdout io.Writer) (*Cache, error) {
+	c := &Cache{Vars: NewVars(f, stdin, stdout)}
 	return c, c.init()
 }
 
@@ -17,6 +19,7 @@ func NewCache() (*Cache, error) {
 type Cache struct {
 	BaseDir string
 	Keys    []string
+	*Vars
 }
 
 func (c *Cache) init() error {

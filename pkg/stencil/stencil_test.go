@@ -1,6 +1,7 @@
 package stencil_test
 
 import (
+	"flag"
 	"io/ioutil"
 	"log"
 	"os"
@@ -30,7 +31,12 @@ func TestCopyFile(t *testing.T) {
 	}
 
 	discard := discardLogger{}
-	if err = stencil.New(discard, discard, fs).Run("fake.stencil"); err != nil {
+	cache, err := stencil.NewCache(flag.NewFlagSet("test", flag.ContinueOnError), nil, nil)
+	if err != nil {
+		t.Fatal("NewCache", err)
+	}
+
+	if err = stencil.New(discard, discard, cache, fs).Run("fake.stencil"); err != nil {
 		t.Fatal("Pull", err)
 	}
 	if string(got) != string(expected) {

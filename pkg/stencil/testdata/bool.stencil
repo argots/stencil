@@ -1,0 +1,4 @@
+{{ stencil.DefineBool "hello" "whatchya hello" }}
+{{ if stencil.VarBool "hello" }}
+    {{ stencil.Zoom "x" }}
+{{ end }}
