@@ -30,23 +30,32 @@ type Vars struct {
 	Bools    map[string]bool
 }
 
+// DefineBool defines a boolean variable name.
 func (v *Vars) DefineBool(name, prompt string) error {
+	if _, ok := v.BoolDefs[name]; ok {
+		return errors.New("redefiniton of " + name)
+	}
 	v.BoolDefs[name] = prompt
 	return nil
 }
 
+// VarBool fetches the value for the named boolean.  If the value is
+// not present either via --var or via a previous invocation, the
+// value is prompted for using the prompt in the definition.
+// Any --var use overrides default values present from previous
+// invocations.
 func (v *Vars) VarBool(name string) (bool, error) {
 	prompt, ok := v.BoolDefs[name]
 	if !ok {
 		return false, errors.New("undefined variable: " + name)
 	}
 
-	if val, ok := v.Bools[name]; ok {
+	if val, ok := v.defs.bools[name]; ok {
+		v.Bools[name] = val
 		return val, nil
 	}
 
-	if val, ok := v.defs.bools[name]; ok {
-		v.Bools[name] = val
+	if val, ok := v.Bools[name]; ok {
 		return val, nil
 	}
 
