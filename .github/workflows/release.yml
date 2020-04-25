@@ -18,7 +18,7 @@ jobs:
         run: ./scripts/build_release_binaries.sh
       - name: Get Tag Message
         id: tag_message
-        run: echo "::set-output name=message::$(git cat-file -p ${{ githuub.ref }} | tail -n +6)"
+        run: echo "::set-output name=message::$(git cat-file -p ${{ github.ref }} | tail -n +6)"
         output: 
       - name: Create Release
         id: create_release
