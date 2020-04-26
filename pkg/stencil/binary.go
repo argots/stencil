@@ -37,7 +37,7 @@ func (b *Binary) CopyFromArchive(key, destination, url, file string) error {
 		defer src.Close()
 		return b.copy(key+fname, destination, src)
 	})
-	if err == nil && seen {
+	if err == nil && !seen {
 		err = errors.New("no such file: " + file)
 	}
 	return err
@@ -74,6 +74,10 @@ func (b *Binary) extract(url string, visit func(name string, r func() io.ReadClo
 		return err
 	}
 	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return errors.New("http.Status " + resp.Status)
+	}
 
 	switch b.guessExtension(resp.Header.Get("Content-Type"), url) {
 	case ".tar":

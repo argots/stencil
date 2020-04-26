@@ -1,5 +1,10 @@
 This file contains the standard way to download nodejs distributions.
 
+The version of nodejs to use is defined by the std.NodeVersion variable.
+
+{{ stencil.DefineString "std.NodeVersion" "Version of node (default v12.16.2)" }}
+{{ $ver := (or (stencil.VarString "std.NodeVersion") "v12.16.2" ) }}
+
 {{ $os := stencil.OS }}
 {{if (eq stencil.OS "windows") }}
   {{ $os = "win" }}
@@ -12,6 +17,6 @@ This file contains the standard way to download nodejs distributions.
   {{ $arch = "x86" }}
 {{end}}
 
-{{ $url := printf "https://nodejs.org/dist/v12.16.2/node-v12.16.2-%s-%s.tar.gz" $os $arch }}
-{{ $bin := printf "node-v12.16.2-%s-%s/bin/node" $os $arch }}
+{{ $url := printf "https://nodejs.org/download/release/%s/node-%s-%s-%s.tar.gz" $ver $ver $os $arch }}
+{{ $bin := printf "node-%s-%s-%s/bin/node" $ver $os $arch }}
 {{ stencil.CopyFromArchive "nodejs" "./bin/node"  $url $bin }}
