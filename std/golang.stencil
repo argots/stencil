@@ -1,6 +1,11 @@
 This file contains the standard way to download golang distributions.
 
+The version of Go to use is defined by the std.GoVersion variable.
+
+{{ stencil.DefineString "std.GoVersion" "Version of Go (default v1.14.2)" }}
+{{ $ver := (or (stencil.VarString "std.GoVersion") "v1.14.2" ) }}
+
 {{ $os := stencil.OS }}
 {{ $arch := stencil.Arch }}
-{{ $url := printf "https://dl.google.com/go/go1.14.2.%s-%s.tar.gz" $os $arch }}
+{{ $url := printf "https://dl.google.com/go/%s.%s-%s.tar.gz" $ver $os $arch }}
 {{ stencil.CopyManyFromArchive "golang" "./bin/"  $url "**" }}
