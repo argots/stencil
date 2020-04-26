@@ -73,8 +73,8 @@ This should copy the nodejs binary into `./bin`
 - [X] Add ability to modify variables `stencil -var XYZ=true`.
 - [X] Add github releases.
 - [X] Add support for downloading  github release via `stencil.CopyFromArchive`
+- [X] Add `stencil.CopyManyFromArchive`
 - [ ] Add string variables and update nodejs install to ask for version.
-- [ ] Add `stencil.ExtractArchive`
 - [ ] Garbage collect unused files.
 - [ ] Add unpull support.
 - [ ] Add 3-way merge if git pull brings newer file and local file also modified.
