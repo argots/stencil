@@ -21,12 +21,16 @@ const targz = ".tar.gz"
 
 // Binary implements managing binaries.
 type Binary struct {
-	FileSystem
+	*Stencil
 }
 
 // CopyFromArchive copies a file from an archive at the url.
 // CopyFromArchive supports .tar, .tar.gz and .zip extensions for the archive.
 func (b *Binary) CopyFromArchive(key, destination, url, file string) error {
+	if b.Objects.existsArchiveFile(key, destination, url, file) {
+		return nil
+	}
+	b.Objects.addArchiveFile(key, destination, url, file)
 	seen := false
 	err := b.extract(url, func(fname string, r func() io.ReadCloser) error {
 		if !strings.EqualFold(file, fname) {
@@ -50,6 +54,10 @@ func (b *Binary) CopyFromArchive(key, destination, url, file string) error {
 // the set of allowed glob patterns. The destination is considered a
 // folder.
 func (b *Binary) CopyManyFromArchive(key, destination, url, glob string) error {
+	if b.Objects.existsArchiveGlob(key, destination, url, glob) {
+		return nil
+	}
+	b.Objects.addArchiveGlob(key, destination, url, glob)
 	return b.extract(url, func(fname string, r func() io.ReadCloser) error {
 		if match, err := doublestar.Match(glob, fname); err != nil || !match {
 			return err

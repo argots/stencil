@@ -1,38 +1,23 @@
 package stencil
 
 import (
-	"bufio"
 	"errors"
 	"flag"
-	"fmt"
-	"io"
 	"strings"
 )
 
-// NewVars creaate a new list of vars
-func NewVars(f *flag.FlagSet, stdin io.Reader, stdout io.Writer) *Vars {
-	var defs defsValue
-	f.Var(&defs, "var", "bool_name or bool_name=yes/no/true/false")
-	return &Vars{
-		defs:       &defs,
-		stdin:      stdin,
-		stdout:     stdout,
-		BoolDefs:   map[string]string{},
-		StringDefs: map[string]string{},
-		Bools:      map[string]bool{},
-		Strings:    map[string]string{},
-	}
-}
-
 // Vars holds named values.
 type Vars struct {
+	*Stencil
 	defs       *defsValue
-	stdin      io.Reader
-	stdout     io.Writer
 	BoolDefs   map[string]string
 	StringDefs map[string]string
-	Bools      map[string]bool
-	Strings    map[string]string
+}
+
+// Init initializes vars.  Must be calleed for flag.Parse.
+func (v *Vars) Init(f *flag.FlagSet) {
+	var defs defsValue
+	f.Var(&defs, "var", "bool_name or bool_name=yes/no/true/false or string_name=value")
 }
 
 // DefineBool defines a boolean variable name.
@@ -73,29 +58,16 @@ func (v *Vars) VarBool(name string) (bool, error) {
 		return val, nil
 	}
 
-	val, err := v.readBool(prompt)
-	if err != nil {
-		return false, err
+	if val, ok := v.Before.Bools[name]; ok {
+		v.Bools[name] = val
+		return val, nil
 	}
-	v.Bools[name] = val
-	return val, nil
-}
 
-func (v *Vars) readBool(prompt string) (bool, error) {
-	for {
-		var s string
-		fmt.Fprintf(v.stdout, "%s (Yes/No/True/False)? ", prompt)
-		if _, err := fmt.Fscanln(v.stdin, &s); err != nil {
-			return false, err
-		}
-
-		switch strings.ToLower(s) {
-		case "t", "true", "y", "yes":
-			return true, nil
-		case "f", "false", "n", "no":
-			return false, nil
-		}
+	val, err := v.PromptBool(prompt)
+	if err == nil {
+		v.Bools[name] = val
 	}
+	return val, err
 }
 
 // VarString fetches the value for the named variable.  If the value is
@@ -118,19 +90,17 @@ func (v *Vars) VarString(name string) (string, error) {
 		return val, nil
 	}
 
-	val, err := v.readString(prompt)
+	if val, ok := v.Before.Strings[name]; ok {
+		v.Strings[name] = val
+		return val, nil
+	}
+
+	val, err := v.PromptString(prompt)
 	if err != nil {
 		return "", err
 	}
 	v.Strings[name] = val
 	return val, nil
-}
-
-func (v *Vars) readString(prompt string) (string, error) {
-	fmt.Fprintf(v.stdout, "%s? ", prompt)
-	scanner := bufio.NewScanner(v.stdin)
-	scanner.Scan()
-	return scanner.Text(), scanner.Err()
 }
 
 type defsValue struct {

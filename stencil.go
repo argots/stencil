@@ -9,18 +9,18 @@ import (
 )
 
 func main() {
-	f := flag.NewFlagSet("stencil", flag.ExitOnError)
-
-	verbose := log.New(os.Stdout, "stencil: ", 0)
-	errorl := log.New(os.Stderr, "stencil: ", 0)
-	cache, err := stencil.NewCache(f, os.Stdin, os.Stdout)
+	baseDir, err := stencil.BaseDir()
 	if err != nil {
-		panic(err)
+		log.Fatal("stencil: basedir", err)
 	}
 
-	fs := &stencil.FS{Verbose: verbose, Errorl: errorl}
+	flags := flag.NewFlagSet("stencil", flag.ExitOnError)
+	verbose := log.New(os.Stdout, "stencil: ", 0)
+	errorl := log.New(os.Stderr, "stencil: ", 0)
+	fs := &stencil.FS{BaseDir: baseDir, Verbose: verbose, Errorl: errorl}
+	p := &stencil.ConsolePrompt{Stdin: os.Stdin, Stdout: os.Stdout}
 
-	if err := stencil.New(verbose, errorl, cache, fs).Main(f, os.Args); err != nil {
+	if err := stencil.New(verbose, errorl, p, fs).Main(flags, os.Args); err != nil {
 		os.Exit(1)
 	}
 }

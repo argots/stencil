@@ -5,7 +5,6 @@ import (
 	"bytes"
 	"errors"
 	"flag"
-	"fmt"
 	"os"
 	"text/template"
 )
@@ -22,14 +21,22 @@ type Logger interface {
 type FileSystem interface {
 	Read(path string) ([]byte, error)
 	Write(path string, data []byte, mode os.FileMode) error
+	Remove(path string) error
+	RemoveAll(path string) error
+}
+
+// Prompter is the generic interface to prompt and fetch info
+// interactively.
+type Prompter interface {
+	PromptBool(prompt string) (bool, error)
+	PromptString(prompt string) (string, error)
 }
 
 // New creates a new stencil manager.
-func New(verbose, errorl Logger, c *Cache, fs FileSystem) *Stencil {
+func New(verbose, errorl Logger, p Prompter, fs FileSystem) *Stencil {
 	s := &Stencil{
 		State:  map[string]interface{}{},
 		Funcs:  map[string]interface{}{},
-		Cache:  c,
 		Printf: verbose.Printf,
 		Errorf: func(fmt string, v ...interface{}) error {
 			errorl.Printf(fmt, v...)
@@ -37,8 +44,24 @@ func New(verbose, errorl Logger, c *Cache, fs FileSystem) *Stencil {
 			return err
 		},
 		FileSystem: fs,
-		Binary:     Binary{fs},
+		Prompter:   p,
+		Binary:     Binary{},
+		Objects: Objects{
+			Before:       &Objects{},
+			Pulls:        map[string]bool{},
+			Files:        map[string]*FileObj{},
+			FileArchives: map[string]*FileArchiveObj{},
+			Bools:        map[string]bool{},
+			Strings:      map[string]string{},
+		},
+		Vars: Vars{
+			BoolDefs:   map[string]string{},
+			StringDefs: map[string]string{},
+		},
 	}
+	s.Binary.Stencil = s
+	s.Objects.Stencil = s
+	s.Vars.Stencil = s
 	s.Funcs["stencil"] = func() interface{} {
 		return s
 	}
@@ -47,30 +70,44 @@ func New(verbose, errorl Logger, c *Cache, fs FileSystem) *Stencil {
 
 // Stencil maintains all the state for managing a single directory.
 type Stencil struct {
-	State map[string]interface{}
-	Funcs map[string]interface{}
-	*Cache
+	State  map[string]interface{}
+	Funcs  map[string]interface{}
 	Printf func(format string, v ...interface{})
 	Errorf func(format string, v ...interface{}) error
 	FileSystem
+	Prompter
 	Env
 	Binary
+	Objects
+	Vars
 }
 
 // Main implements the main program
 func (s *Stencil) Main(f *flag.FlagSet, args []string) error {
 	f.Usage = func() {
-		fmt.Fprint(s.Cache.Vars.stdout, "Usage: stencil [options] pull github-url")
+		s.Printf("Usage: stencil [options] pull github-url")
 		f.PrintDefaults()
 	}
-	f.SetOutput(s.Cache.Vars.stdout)
+	s.Vars.Init(f)
 	if err := f.Parse(args[1:]); err != nil {
 		return s.Errorf("flagset parse", err)
 	}
 
 	switch f.Arg(0) {
 	case "pull":
-		return s.Run(f.Arg(1))
+		if err := s.Objects.LoadObjects(); err != nil {
+			return err
+		}
+		for pull := range s.Before.Pulls {
+			s.Objects.addPull(pull)
+		}
+		s.Objects.addPull(f.Arg(1))
+		for pull := range s.Pulls {
+			if err := s.Run(pull); err != nil {
+				return err
+			}
+		}
+		return s.SaveObjects()
 	case "":
 		f.Usage()
 		return nil
@@ -81,6 +118,8 @@ func (s *Stencil) Main(f *flag.FlagSet, args []string) error {
 // CopyFile copies a url to a local file.
 func (s *Stencil) CopyFile(key, localPath, url string) error {
 	s.Printf("copying %s to %s, key (%s)\n", url, localPath, key)
+	s.Objects.addFile(key, localPath, url)
+
 	data, err := s.Read(url)
 	if err != nil {
 		return s.Errorf("Error reading %s %v\n", url, err)
