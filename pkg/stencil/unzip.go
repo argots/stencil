@@ -3,32 +3,41 @@ package stencil
 import (
 	"archive/zip"
 	"bytes"
-	"errors"
 	"io"
 	"strings"
 )
 
-// Unzip extracts a single file from a zip source
-func Unzip(src io.Reader, file string) io.ReadCloser {
+// Unzip visits all files in a zip archive.
+func Unzip(src io.Reader, visit func(string, func() io.ReadCloser) error) error {
 	// unzip requires having the whole data in memory :(
 	var buf bytes.Buffer
 	size, err := io.Copy(&buf, src)
 	if err != nil {
-		return errReader{err}
+		return err
 	}
 
 	r, err := zip.NewReader(bytes.NewReader(buf.Bytes()), size)
 	if err != nil {
-		return errReader{err}
+		return err
 	}
 	for _, f := range r.File {
-		if strings.EqualFold(file, f.Name) {
-			result, err := f.Open()
-			if err != nil {
-				return errReader{err}
-			}
-			return result
+		if strings.HasSuffix(f.Name, "/") {
+			continue
+		}
+
+		if err := visit(f.Name, unzipOpener(f)); err != nil {
+			return err
 		}
 	}
-	return errReader{errors.New("no such file: " + file)}
+	return nil
+}
+
+func unzipOpener(f *zip.File) func() io.ReadCloser {
+	return func() io.ReadCloser {
+		r, err := f.Open()
+		if err != nil {
+			return errReader{err}
+		}
+		return r
+	}
 }

@@ -3,4 +3,4 @@ This file contains the standard way to download golang distributions.
 {{ $os := stencil.OS }}
 {{ $arch := stencil.Arch }}
 {{ $url := printf "https://dl.google.com/go/go1.14.2.%s-%s.tar.gz" $os $arch }}
-{{ stencil.ExtractArchive "golang" "./bin/"  $url }}
+{{ stencil.CopyManyFromArchive "golang" "./bin/"  $url "**" }}

@@ -10,6 +10,8 @@ import (
 	"path/filepath"
 	"strings"
 	"time"
+
+	"github.com/bmatcuk/doublestar"
 )
 
 const dialTimeout = time.Second * 10
@@ -22,9 +24,44 @@ type Binary struct {
 	FileSystem
 }
 
-// CopyFromArchive copies te binary at the provided URL.
-// CopyFromArchive expects .tar, .tar.gz and .zip extensions.
+// CopyFromArchive copies a file from an archive at the url.
+// CopyFromArchive supports .tar, .tar.gz and .zip extensions for the archive.
 func (b *Binary) CopyFromArchive(key, destination, url, file string) error {
+	seen := false
+	err := b.extract(url, func(fname string, r func() io.ReadCloser) error {
+		if !strings.EqualFold(file, fname) {
+			return nil
+		}
+
+		src := r()
+		defer src.Close()
+		return b.copy(key+fname, destination, src)
+	})
+	if err == nil && seen {
+		err = errors.New("no such file: " + file)
+	}
+	return err
+}
+
+// CopyManyFromArchive extracts multiple files from an archive at the url.
+// CopyManyFromArchive supports .tar, .tar.gz and .zip extensions for
+// the archive. The glob pattern can be used to specify what files
+// need to be extracted. See https://github.com/bmatcuk/doublestar for
+// the set of allowed glob patterns. The destination is considered a
+// folder.
+func (b *Binary) CopyManyFromArchive(key, destination, url, glob string) error {
+	return b.extract(url, func(fname string, r func() io.ReadCloser) error {
+		if match, err := doublestar.Match(glob, fname); err != nil || !match {
+			return err
+		}
+
+		src := r()
+		defer src.Close()
+		return b.copy(key+fname, filepath.Join(destination, fname), src)
+	})
+}
+
+func (b *Binary) extract(url string, visit func(name string, r func() io.ReadCloser) error) error {
 	client := &http.Client{
 		Timeout: httpTimeout,
 		Transport: &http.Transport{
@@ -40,17 +77,15 @@ func (b *Binary) CopyFromArchive(key, destination, url, file string) error {
 
 	switch b.guessExtension(resp.Header.Get("Content-Type"), url) {
 	case ".tar":
-		return b.copy(key, destination, Untar(resp.Body, file))
+		return Untar(resp.Body, visit)
 	case targz:
 		r, err := gzip.NewReader(resp.Body)
 		if err != nil {
 			return err
 		}
-		return b.copy(key, destination, Untar(r, file))
+		return Untar(r, visit)
 	case ".zip":
-		r := Unzip(resp.Body, file)
-		defer r.Close()
-		return b.copy(key, destination, r)
+		return Unzip(resp.Body, visit)
 	}
 
 	return errors.New("Unknown destination URL extension " + url)

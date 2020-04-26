@@ -1,6 +1,10 @@
 This file contains the standard way to download nodejs distributions.
 
 {{ $os := stencil.OS }}
+{{if (eq stencil.OS "windows") }}
+  {{ $os = "win" }}
+{{end}}
+
 {{ $arch := stencil.Arch }}
 {{if (eq stencil.Arch "amd64") }}
   {{ $arch = "x64" }}
