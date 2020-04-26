@@ -1,7 +1,6 @@
 package stencil_test
 
 import (
-	"flag"
 	"io/ioutil"
 	"log"
 	"os"
@@ -31,12 +30,7 @@ func TestCopyFile(t *testing.T) {
 	}
 
 	discard := discardLogger{}
-	cache, err := stencil.NewCache(flag.NewFlagSet("test", flag.ContinueOnError), nil, nil)
-	if err != nil {
-		t.Fatal("NewCache", err)
-	}
-
-	if err = stencil.New(discard, discard, cache, fs).Run("fake.stencil"); err != nil {
+	if err = stencil.New(discard, discard, nil, fs).Run("fake.stencil"); err != nil {
 		t.Fatal("Pull", err)
 	}
 	if string(got) != string(expected) {
@@ -50,6 +44,9 @@ type fakeFS struct {
 }
 
 func (f fakeFS) Write(fname string, data []byte, mode os.FileMode) error {
+	if f.write == nil {
+		return nil
+	}
 	return f.write(fname, data, mode)
 }
 
@@ -61,6 +58,14 @@ func (f fakeFS) Read(fname string) ([]byte, error) {
 	discard := discardLogger{}
 	fs := &stencil.FS{Verbose: discard, Errorl: discard}
 	return fs.Read(fname)
+}
+
+func (f fakeFS) Remove(path string) error {
+	return nil
+}
+
+func (f fakeFS) RemoveAll(path string) error {
+	return nil
 }
 
 type discardLogger struct{}
