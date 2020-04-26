@@ -31,6 +31,10 @@ func (fs *FS) Write(path string, data []byte, mode os.FileMode) error {
 	}
 
 	path = filepath.Join(cwd, filepath.Clean(path))
+	if err = os.MkdirAll(filepath.Dir(path), 0766); err != nil {
+		return err
+	}
+
 	return ioutil.WriteFile(path, data, mode)
 }
 

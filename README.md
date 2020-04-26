@@ -49,14 +49,34 @@ extension.  To get the right extension, do this instead:
 curl https://github.com/argots/stencil/releases/download/$VERSION/$OS_$ARCH.zip | tar -C $INSTALL_DIR -xvf - stencil --transform "s/stencil/stencil.exe"
 ```
 
+## Using stencil to install tools
+
+Stencil follows the philosophy that all tools needed for a project
+should be local to the project directory so that projects can be
+isolated from each other.  So, installing tools would require that
+binary tool releases are copied to a local directory, preferably
+`./bin`.
+
+For example, `nodejs` can be installed using the following script:
+
+```sh
+$ stencil pull git:git@github.com/argots/stencil#master/std/nodejs.node.stencil
+```
+
+This should copy the nodejs binary into `./bin`
+
 ## Todo
 
 - [X] `stencil pull file.tpl` should run the file as a go template.
 - [X] Add template function `stencil.CopyFile` to copy github URLs locally.
-- [X] Add template variables `stencil.DefineBool("name", "prompt")` and `stencil.VarBool("name")`
-- [X] Add ability to modify variables `stencil -var XYZ=true`
-- [X] Add github releases
-- [ ] Add support for downloading  github release
+- [X] Add template variables `stencil.DefineBool("name", "prompt")` and `stencil.VarBool("name")`.
+- [X] Add ability to modify variables `stencil -var XYZ=true`.
+- [X] Add github releases.
+- [X] Add support for downloading  github release via `stencil.CopyFromArchive`
+- [ ] Add string variables and update nodejs install to ask for version.
+- [ ] Add `stencil.ExtractArchive`
+- [ ] Garbage collect unused files.
+- [ ] Add unpull support.
 - [ ] Add 3-way merge if git pull brings newer file and local file also modified.
 - [ ] `stencil pull github.com/...` should fetch from public github (standard github url)
 - [ ] Update `stencil.CopyFile(..)` to support relative github URLs
