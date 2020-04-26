@@ -36,5 +36,5 @@ func (c *ConsolePrompt) PromptString(prompt string) (string, error) {
 	fmt.Fprintf(c.Stdout, "%s? ", prompt)
 	scanner := bufio.NewScanner(c.Stdin)
 	scanner.Scan()
-	return scanner.Text(), scanner.Err()
+	return strings.TrimSpace(scanner.Text()), scanner.Err()
 }

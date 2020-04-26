@@ -82,7 +82,7 @@ type Stencil struct {
 	Vars
 }
 
-// Main implements the main program
+// Main implements the main program.
 func (s *Stencil) Main(f *flag.FlagSet, args []string) error {
 	f.Usage = func() {
 		s.Printf("Usage: stencil [options] pull github-url")

@@ -17,7 +17,7 @@ managers:
 
 1. Only modify folders within the current directory.
 2. Allow package writers to customize the files based on inputs chosen
-the user (such as do you want "https" support?).
+by the user (such as version of NodeJS)
 3. Allow users to modify the generated files without affecting the
 ability to upgrade stencil packages -- they should properly merge much
 like git itself.
@@ -49,7 +49,7 @@ extension.  To get the right extension, do this instead:
 curl https://github.com/argots/stencil/releases/download/$VERSION/$OS_$ARCH.zip | tar -C $INSTALL_DIR -xvf - stencil --transform "s/stencil/stencil.exe"
 ```
 
-## Using stencil to install tools
+## Using stencil to install tools.
 
 Stencil follows the philosophy that all tools needed for a project
 should be local to the project directory so that projects can be
@@ -60,10 +60,25 @@ binary tool releases are copied to a local directory, preferably
 For example, `nodejs` can be installed using the following script:
 
 ```sh
-$ stencil pull git:git@github.com/argots/stencil#master/std/nodejs.node.stencil
+$ stencil pull git:git@github.com/argots/stencil#master/std/nodejs.node.md
 ```
 
-This should copy the nodejs binary into `./bin`
+This should copy the node binary into `./bin.`
+
+## Stencil recipes are markdown and Go templating.
+
+Please see
+[golangci-lint](https://github.com/argots/stencil/tree/master/std/golanci-lint.md)
+or
+[NodeJS](https://github.com/argots/stencil/tree/master/std/nodejs.node.md)
+or [Go](https://github.com/argots/stencil/tree/master/std/golang.md)
+for example recipes.  As you might notices, these recipes are all
+markdown files to make this readable.  Stencil uses the Go templating
+engine but discards the output of this file which allows this file to
+be written in a more readable fashion.  Code within the code-fences in
+the markdown is interpreted using the Golang template engine but with
+functions provided by Stencil.
+
 
 ## Todo
 
@@ -75,7 +90,7 @@ This should copy the nodejs binary into `./bin`
 - [X] Add support for downloading  github release via `stencil.CopyFromArchive`
 - [X] Add `stencil.CopyManyFromArchive`
 - [X] Add string variables and update nodejs install to ask for version.
-- [ ] Garbage collect unused files.
+- [X] Garbage collect unused files.
 - [ ] Add unpull support.
 - [ ] Add 3-way merge if git pull brings newer file and local file also modified.
 - [ ] `stencil pull github.com/...` should fetch from public github (standard github url)

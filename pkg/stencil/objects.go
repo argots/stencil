@@ -42,7 +42,7 @@ func (o *Objects) LoadObjects() error {
 
 // SaveObjects saves all the objects to the .stencil directory.
 func (o *Objects) SaveObjects() error {
-	data, err := json.Marshal(o) //nolint: staticcheck
+	data, err := json.MarshalIndent(o, "", "  ") //nolint: staticcheck
 	if err != nil {
 		return err
 	}

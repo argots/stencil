@@ -9,15 +9,14 @@ import (
 // Vars holds named values.
 type Vars struct {
 	*Stencil
-	defs       *defsValue
+	defs       defsValue
 	BoolDefs   map[string]string
 	StringDefs map[string]string
 }
 
 // Init initializes vars.  Must be calleed for flag.Parse.
 func (v *Vars) Init(f *flag.FlagSet) {
-	var defs defsValue
-	f.Var(&defs, "var", "bool_name or bool_name=yes/no/true/false or string_name=value")
+	f.Var(&v.defs, "var", "bool_name or bool_name=yes/no/true/false or string_name=value")
 }
 
 // DefineBool defines a boolean variable name.
@@ -99,6 +98,7 @@ func (v *Vars) VarString(name string) (string, error) {
 	if err != nil {
 		return "", err
 	}
+
 	v.Strings[name] = val
 	return val, nil
 }
