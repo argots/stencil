@@ -10,7 +10,7 @@ func (e Env) OS() string {
 	return runtime.GOOS
 }
 
-// Arch returns runtime.GOARCH
+// Arch returns runtime.GOARCH.
 func (e Env) Arch() string {
 	return runtime.GOARCH
 }

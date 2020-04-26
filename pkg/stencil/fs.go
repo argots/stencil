@@ -39,7 +39,7 @@ func (fs *FS) RemoveAll(path string) error {
 	return os.RemoveAll(path)
 }
 
-// Write saves a file within the local directory
+// Write saves a file within the local directory.
 func (fs *FS) Write(path string, data []byte, mode os.FileMode) error {
 	path = filepath.Join(fs.BaseDir, filepath.Clean(path))
 	if err := os.MkdirAll(filepath.Dir(path), 0766); err != nil {

@@ -20,7 +20,9 @@ func main() {
 	fs := &stencil.FS{BaseDir: baseDir, Verbose: verbose, Errorl: errorl}
 	p := &stencil.ConsolePrompt{Stdin: os.Stdin, Stdout: os.Stdout}
 
-	if err := stencil.New(verbose, errorl, p, fs).Main(flags, os.Args); err != nil {
+	s := stencil.New(verbose, errorl, p, fs)
+	if err := s.Main(flags, os.Args); err != nil {
+		errorl.Printf("error %v\n", err)
 		os.Exit(1)
 	}
 }
