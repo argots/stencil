@@ -37,6 +37,7 @@ func New(verbose, errorl Logger, c *Cache, fs FileSystem) *Stencil {
 			return err
 		},
 		FileSystem: fs,
+		Binary:     Binary{fs},
 	}
 	s.Funcs["stencil"] = func() interface{} {
 		return s
@@ -52,6 +53,8 @@ type Stencil struct {
 	Printf func(format string, v ...interface{})
 	Errorf func(format string, v ...interface{}) error
 	FileSystem
+	Env
+	Binary
 }
 
 // Main implements the main program
