@@ -4,6 +4,12 @@ This stencil installs a standard golang distribution.  Go requries the
 whole zip file unfortunately, so this installs the actual go binary
 under ./bin/go/bin/go
 
+## Usage
+
+```bash
+stencil pull git:git@github.com:argots/stencil.git/std/golang.md
+```
+
 ## Version
 
 The version of Go to use is defined by the std.GoVersion variable.

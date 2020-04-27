@@ -1,9 +1,9 @@
 package stencil_test
 
 import (
-	"io/ioutil"
 	"log"
 	"os"
+	"runtime"
 	"strings"
 	"testing"
 
@@ -12,10 +12,11 @@ import (
 
 func TestCopyFile(t *testing.T) {
 	//nolint: lll
-	code := `{{ stencil.CopyFile "test1" "/test.txt" "git:git@github.com:argots/stencil.git/pkg/stencil/testdata/test.stencil" }}`
+	code := `{{ stencil.CopyFile "test1" "/test.txt" "source" }}`
+	src := `{{ stencil.OS }}`
 	var got []byte
 	fs := fakeFS{
-		files: map[string]string{"fake.stencil": code},
+		files: map[string]string{"fake.stencil": code, "source": src},
 		write: func(name string, data []byte, mode os.FileMode) error {
 			if strings.HasSuffix(name, "/test.txt") {
 				got = data
@@ -24,17 +25,12 @@ func TestCopyFile(t *testing.T) {
 		},
 	}
 
-	expected, err := ioutil.ReadFile("testdata/test.stencil")
-	if err != nil {
-		t.Fatal(err)
-	}
-
 	discard := discardLogger{}
-	if err = stencil.New(discard, discard, nil, fs).Run("fake.stencil"); err != nil {
+	if err := stencil.New(discard, discard, nil, fs).Run("fake.stencil"); err != nil {
 		t.Fatal("Pull", err)
 	}
-	if string(got) != string(expected) {
-		t.Error("Got", string(got), "\nExpected", string(expected))
+	if string(got) != runtime.GOOS {
+		t.Error("Got", string(got), "\nExpected", runtime.GOOS)
 	}
 }
 

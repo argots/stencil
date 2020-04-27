@@ -1,6 +1,12 @@
 # Install Node
 
-This stencil installs Node into `./bin/node.`  This does not install `npm`.
+This stencil installs Node into ./bin/node.  This does not install `npm`.
+
+## Usage
+
+```bash
+stencil pull git:git@github.com:argots/stencil.git/std/nodejs.node.md
+```
 
 ## Version
 
