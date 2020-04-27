@@ -87,8 +87,14 @@ type Stencil struct {
 
 // Main implements the main program.
 func (s *Stencil) Main(f *flag.FlagSet, args []string) error {
+	errMissingArg := errors.New("missing arg")
 	f.Usage = func() {
-		s.Printf("Usage: stencil [options] pull github-url")
+		s.Printf(`Usage: stencil [options] commands
+  commands:
+    pull url_or_file -- add url to pulls and sync
+    rm url_or_fil    -- remove url from pulls and sync
+    sync             -- update all existing pulls
+`)
 		f.PrintDefaults()
 	}
 	s.Vars.Init(f)
@@ -98,24 +104,50 @@ func (s *Stencil) Main(f *flag.FlagSet, args []string) error {
 
 	switch f.Arg(0) {
 	case "pull":
-		if err := s.Objects.LoadObjects(); err != nil {
-			return err
+		if f.Arg(1) != "" {
+			s.Printf("Adding %s\n", f.Arg(1))
+			return s.run(f.Arg(1), "")
 		}
-		for pull := range s.Before.Pulls {
-			s.Objects.addPull(pull)
+		return s.Errorf("pull requires a url or path to a recipe %v\n", errMissingArg)
+	case "sync":
+		s.Printf("Updating all pulled recipes\n")
+		return s.run("", "")
+	case "rm":
+		if f.Arg(1) != "" {
+			s.Printf("Removing %s\n", f.Arg(1))
+			return s.run("", f.Arg(1))
 		}
-		s.Objects.addPull(f.Arg(1))
-		for pull := range s.Pulls {
-			if err := s.Run(pull); err != nil {
-				return err
-			}
-		}
-		return s.SaveObjects()
+		return s.Errorf("rm requires a url or path to a recipe %v\n", errMissingArg)
 	case "":
 		f.Usage()
 		return nil
 	}
 	return s.Errorf("%v", errors.New("unknown command: "+f.Arg(0)))
+}
+
+func (s *Stencil) run(add, rm string) error {
+	if err := s.Objects.LoadObjects(); err != nil {
+		return s.Errorf("LoadObjects %v\n", err)
+	}
+	for pull := range s.Before.Pulls {
+		if pull != rm {
+			s.Objects.addPull(pull)
+		}
+	}
+	if add != "" {
+		s.Objects.addPull(add)
+	}
+	for pull := range s.Pulls {
+		s.Printf("Pulling %s\n", pull)
+		if err := s.Run(pull); err != nil {
+			return s.Errorf("Run: %v\n", err)
+		}
+	}
+	if err := s.GC(); err != nil {
+		return s.Errorf("GC %v\n", err)
+	}
+
+	return s.SaveObjects()
 }
 
 // CopyFile copies a url to a local file.

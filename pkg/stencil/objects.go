@@ -81,42 +81,35 @@ func (o *Objects) existsArchiveGlob(key, dest, url, file string) bool {
 }
 
 // GC removes any files and dirs that are no longer active.
-func (o *Objects) GC(baseDir string, fs FileSystem) error {
+func (o *Objects) GC() error {
 	files := map[string]bool{}
 	dirs := map[string]bool{}
-	o.Before.visitFile(baseDir, func(file string) {
+	o.Before.visitFile(func(file string) {
 		files[file] = true
 	})
-	o.Before.visitDir(baseDir, func(dir string) {
+	o.Before.visitDir(func(dir string) {
 		dirs[dir] = true
 	})
-	o.visitFile(baseDir, func(file string) {
+	o.visitFile(func(file string) {
 		delete(files, file)
 		o.deleteParents(dirs, file)
 	})
-	o.visitDir(baseDir, func(dir string) {
+	o.visitDir(func(dir string) {
 		delete(dirs, dir)
 		o.deleteParents(dirs, dir)
 	})
 
 	for file := range files {
-		if err := fs.Remove(file); err != nil {
+		if err := o.Remove(file); err != nil {
 			return err
 		}
 	}
 	for dir := range dirs {
-		if err := fs.RemoveAll(dir); err != nil {
+		if err := o.RemoveAll(dir); err != nil {
 			return err
 		}
 	}
-
-	data, err := json.Marshal(o) //nolint: staticcheck
-	if err != nil {
-		return err
-	}
-
-	path := filepath.Join(baseDir, ".stencil", "objects.json")
-	return fs.Write(path, data, 0666)
+	return nil
 }
 
 func (o *Objects) deleteParents(dirs map[string]bool, file string) {
@@ -126,19 +119,19 @@ func (o *Objects) deleteParents(dirs map[string]bool, file string) {
 	}
 }
 
-func (o *Objects) visitFile(baseDir string, fn func(file string)) {
+func (o *Objects) visitFile(fn func(file string)) {
 	for _, f := range o.Files {
-		fn(filepath.Join(baseDir, f.Loc))
+		fn(filepath.Clean(f.Loc))
 	}
 	for _, f := range o.FileArchives {
-		fn(filepath.Join(baseDir, f.Loc))
+		fn(filepath.Clean(f.Loc))
 	}
 }
 
-func (o *Objects) visitDir(baseDir string, fn func(dir string)) {
+func (o *Objects) visitDir(fn func(dir string)) {
 	for _, f := range o.FileArchives {
 		if f.Many {
-			fn(filepath.Join(baseDir, f.Loc))
+			fn(filepath.Clean(f.Loc))
 		}
 	}
 }
