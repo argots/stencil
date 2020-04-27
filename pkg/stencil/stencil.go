@@ -58,10 +58,12 @@ func New(verbose, errorl Logger, p Prompter, fs FileSystem) *Stencil {
 			BoolDefs:   map[string]string{},
 			StringDefs: map[string]string{},
 		},
+		Markdown: Markdown{},
 	}
 	s.Binary.Stencil = s
 	s.Objects.Stencil = s
 	s.Vars.Stencil = s
+	s.Markdown.Stencil = s
 	s.Funcs["stencil"] = func() interface{} {
 		return s
 	}
@@ -80,6 +82,7 @@ type Stencil struct {
 	Binary
 	Objects
 	Vars
+	Markdown
 }
 
 // Main implements the main program.
@@ -141,11 +144,23 @@ func (s *Stencil) Import(source string) (string, error) {
 
 // Execute is like Run but it returns the output.
 func (s *Stencil) Execute(source string) (string, error) {
+	return s.executeFilter(source, nil)
+}
+
+func (s *Stencil) executeFilter(source string, filter func(string) (string, error)) (string, error) {
 	s.Printf("Executing %s\n", source)
 
 	data, err := s.Read(source)
 	if err != nil {
 		return "", s.Errorf("Error reading %s: %v\n", source, err)
+	}
+
+	if filter != nil {
+		str, err := filter(string(data))
+		if err != nil {
+			return "", s.Errorf("Error filtering %s: %v", source, err)
+		}
+		data = []byte(str)
 	}
 
 	t, err := template.New(source).Funcs(s.Funcs).Parse(string(data))

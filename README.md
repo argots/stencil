@@ -6,6 +6,17 @@
 
 Stencil is a simple package manager for static files and templates.
 
+## Contents
+1. [Why another package manager?](#why-another-package-manager)
+2. [Install](#install)
+3. [Platforms supported](#platforms-supported)
+4. [Stencil recipes are markdown and Go templating](#stencil-recipes-are-markdown-and-go-templating)
+5. [Example templating with stencil](#example-templating-with-stencil)
+6. [Code generation from markdowns](#code-generation-from-markdowns)
+7. [Stencil variables](#stencil-variables)
+8. [Status](#status)
+9. [Todo](#todo)
+
 ## Why another package manager?
 
 Stencil primarily came about from the pain of working with many
@@ -162,6 +173,25 @@ Now we can test it all:
 $ stencil pull my_recipe.md
 ```
 
+## Code generation from markdowns
+
+Stencil also supports a `stencil.CopyMarkdownSnippet` function which
+allows code to be embedded within the recipe itself with code fences.
+
+This is shown in the [snippets.md
+example](https://github.com/argots/stencil/blob/master/examples/snippets.md).
+
+This recipe includes a code fence tagged with `golang` which is then
+used in the `stencil.CopyMarkdownSnippets` instruction -- the pattern
+provided to this function is used to filter out the relevant code
+fences and only include those in the `./example.go` file genrated.
+
+The following command invokes the recipe above:
+
+```bash
+stencil pull git:git@github.com:argots/stencil.git/examples/snippets.md
+```
+
 ## Stencil variables
 
 Stencil variables are meant to hold configurable things like version
@@ -182,6 +212,11 @@ The variable name can only be discovered by looking at the recipe or
 looking at `.stencil/objects.json` (which has a Strings and Bools key
 with the associated values).
 
+## Status
+
+This is still unstable.  In particular, the APIs may change slightly
+as they do not compose very well still.
+
 ## Todo
 
 - [X] `stencil pull file.tpl` should run the file as a go template.
@@ -196,6 +231,7 @@ with the associated values).
 - [X] Garbage collect unused files.
 - [X] `stencil pull git:git@github.com:repo/user/path` should fetch from public github (standard github url)
 - [X] `stencil pull ...` should fetch from private github using ssh settings
+- [X] Add `stencil.CopyMarkdownSnippets` support
 - [ ] Add unpull support.
 - [ ] `stencil pull` should pull latest versions of all URLs that were already pulled.
 - [ ] Add 3-way merge if git pull brings newer file and local file also modified.
