@@ -21,8 +21,8 @@ The version of golagnci-lint is defined by std.GolangCILintVersion.
 
 ## Normalize prefixes
 
-Note that golangci-lint does not use the v prefix for downloads, so
-we strip out the frist character.
+Note that golangci-lint uses the version tag without the `v` within
+the download url.  So we strip out the first character.
 
 ```go-template
 

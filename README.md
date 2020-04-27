@@ -24,7 +24,7 @@ derived repositories.
 
 A typical approach is to use a [github template
 repository](https://help.github.com/en/github/creating-cloning-and-archiving-repositories/creating-a-template-repository)
-but only solves a small set of the problems identified above.
+but this only solves a small set of the problems identified above.
 
 Stencil sets out to solve these problems:
 
@@ -32,7 +32,7 @@ Stencil sets out to solve these problems:
 local disk layout for a *workspace*.
 2. Provide a [mad-lib](https://en.wikipedia.org/wiki/Mad_Libs) style
 interactive configurability by prompting users for choices and
-remember those choices for future runs.
+remembering those choices for future runs.
 3. Provide the ability to change templates and pull these changes
 locally *a la Git* with proper three-way merges.
 4. Allow multiple templates to be used within a *workspace.*
@@ -43,8 +43,8 @@ Stencil makes a few opinionated choices:
 1. **Strong Isolation:**  Stencil recipes cannot modify any files or
 the environment outside a workspace.  This includes any tools
 (including language environments).  This has the side-effect that
-tool-chains are duplicated but the expliclit tradeoff is that clean
-isolation and worth it to avoid the complexity and unpredictability of
+tool-chains are duplicated but the expliclit tradeoff is we getclean
+isolation and avoid the complexity and unpredictability of
 shared tools.  At some point, Stencil may get smart enough to use
 [Content addressable
 storage](https://en.wikipedia.org/wiki/Content-addressable_storage) techniques.
@@ -60,10 +60,12 @@ reconciliaton](https://reactjs.org/docs/reconciliation.html) process.
 All changes done by Stencil are remembered between runs and so any
 files that are not written by a specific run are automatically
 cleaned up. This incurs a performance cost but makes it easier to
-write Stencil recipes and maintain repositories.
+write Stencil recipes and maintain repositories.  The actual APIs do
+not have a declarative feel beyond requiring a "key" argument to make
+it easier to use.
 4. **Conflict Resolution:** Stencil aims to handle upstream changes of
 templates gracefully even when the local files are modified by
-invoking Git's three-way merge.  Much like Git, if this fails, the
+invoking a three-way merge.  Much like Git, if this fails, the
 local files are left in a conflicted state (with manual fixups as
 needed).
 
@@ -94,7 +96,7 @@ curl https://github.com/argots/stencil/releases/download/$VERSION/$OS_$ARCH.zip 
 
 There are no doubt other such minor changes needed.
 
-## Stencil recipes are markdown and Go templating.
+## Stencil recipes are markdown and Go templating
 
 Please see
 [golangci-lint](https://github.com/argots/stencil/blob/master/std/golangci-lint.md)
@@ -162,10 +164,19 @@ $ stencil pull my_recipe.md
 
 ## Stencil variables
 
-Stencil variables are prompted for only once.  For subsequent
-attempts, the result from the last prompt are reused.  The variables
-can be forcibly changed by passing in `--var Name` (for booleans) and
-`--var Name=Value` (for all types).
+Stencil variables are meant to hold configurable things like version
+of Node or package name etc.  These are prompted for only once with
+subsequent attempts reusing the last value (which is saved in the file
+`.stencil/objects.json`).
+
+Variables can be forcibly changed by passing in `--var Name` (for
+booleans) and `--var Name=Value` (for all types).
+
+Within a template, variables must first be defined using
+`stencil.DefineString "name" "prompt"` or `stencil.DefineBool "name"
+"prompt"` before the current value is fetched.  The current value can
+be fetched using `stencil.VarString "name"` or `stencil.VarBool
+"name"`.
 
 The variable name can only be discovered by looking at the recipe or
 looking at `.stencil/objects.json` (which has a Strings and Bools key
@@ -176,6 +187,7 @@ with the associated values).
 - [X] `stencil pull file.tpl` should run the file as a go template.
 - [X] Add template function `stencil.CopyFile` to copy github URLs locally.
 - [X] Add template variables `stencil.DefineBool("name", "prompt")` and `stencil.VarBool("name")`.
+- [X] Add template variables `stencil.DefineString` and `stencil.VarString`
 - [X] Add ability to modify variables `stencil -var XYZ=true`.
 - [X] Add github releases.
 - [X] Add support for downloading  github release via `stencil.CopyFromArchive`
@@ -185,13 +197,14 @@ with the associated values).
 - [X] `stencil pull git:git@github.com:repo/user/path` should fetch from public github (standard github url)
 - [X] `stencil pull ...` should fetch from private github using ssh settings
 - [ ] Add unpull support.
-- [ ] Add 3-way merge if git pull brings newer file and local file also modified.
-- [ ] Update `stencil.CopyFile(..)` to support relative github URLs
-- [ ] Add template variables `string("name", "prompt")` and `var("name")`
 - [ ] `stencil pull` should pull latest versions of all URLs that were already pulled.
+- [ ] Add 3-way merge if git pull brings newer file and local file also modified.
+- [ ] Add ability to look at all variable values.
 - [ ] Add nested templates support: `import(otherFile)`
+- [ ] Update `stencil.CopyFile` to support relative github URLs
 - [ ] Add nested pull support `pull(args)`
-- [ ] Add ability to use keyrings for secrets `secret("name", "prompt")` and `var("name")`
+- [ ] Add ability to use keyrings for secrets
 - [ ] Add ability to work with file patches inserted using markers
 - [ ] Deal with diamond dependencies?
 - [ ] Unsafe shell exec?
+- [ ] Other template engines than the default Go? Other script languages?
