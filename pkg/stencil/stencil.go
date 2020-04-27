@@ -120,11 +120,11 @@ func (s *Stencil) CopyFile(key, localPath, url string) error {
 	s.Printf("copying %s to %s, key (%s)\n", url, localPath, key)
 	s.Objects.addFile(key, localPath, url)
 
-	data, err := s.Read(url)
+	data, err := s.Execute(url)
 	if err != nil {
 		return s.Errorf("Error reading %s %v\n", url, err)
 	}
-	return s.Write(localPath, data, 0666)
+	return s.Write(localPath, []byte(data), 0666)
 }
 
 // Run runs a template discarding the output.
@@ -136,6 +136,12 @@ func (s *Stencil) Run(source string) error {
 // Import imports a template after applying it.
 func (s *Stencil) Import(source string) (string, error) {
 	s.Printf("Running import %s\n", source)
+	return s.Execute(source)
+}
+
+// Execute is like Run but it returns the output.
+func (s *Stencil) Execute(source string) (string, error) {
+	s.Printf("Executing %s\n", source)
 
 	data, err := s.Read(source)
 	if err != nil {

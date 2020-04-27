@@ -2,6 +2,12 @@
 
 This stencil installs the golangci-lint into ./bin/golangici-lint.
 
+## Usage
+
+```bash
+stencil pull git:git@github.com:argots/stencil.git/std/golangci-lint.md
+```
+
 ## Version
 
 The version of golagnci-lint is defined by std.GolangCILintVersion.
