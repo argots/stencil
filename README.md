@@ -232,8 +232,8 @@ as they do not compose very well still.
 - [X] `stencil pull git:git@github.com:repo/user/path` should fetch from public github (standard github url)
 - [X] `stencil pull ...` should fetch from private github using ssh settings
 - [X] Add `stencil.CopyMarkdownSnippets` support
-- [ ] Add unpull support.
-- [ ] `stencil pull` should pull latest versions of all URLs that were already pulled.
+- [X] Add `stencil rm url_or_file` to remove file from list.
+- [X] Add `stencil sync` to pull latest versions of everything.
 - [ ] Add 3-way merge if git pull brings newer file and local file also modified.
 - [ ] Add ability to look at all variable values.
 - [ ] Add nested templates support: `import(otherFile)`
